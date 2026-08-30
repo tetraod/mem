@@ -109,6 +109,9 @@ if (ki==4) {
 end_session=true;
 save_prog();
 }
+else if (ki==5) {
+memory[test_word_ind].score = max_reader_score;
+}
 else if (ki==ci) {printf("correct\n");correct=true;}
 else {printf("%s=%s\n",memory[test_word_ind].L1,memory[test_word_ind].L2);}
 
