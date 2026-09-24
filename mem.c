@@ -8,7 +8,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAX_MEM 1000
+#define MAX_MEM 5000
 //MAX_MEM >= voc size
 #define MAX_WLEN 50
 
