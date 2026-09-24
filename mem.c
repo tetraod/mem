@@ -76,7 +76,7 @@ exit(1);
 
 int i;
 for (i=0;memory[i].L1[0]!='\0';i++){
-fprintf(f,"%s;%s;%d\n",memory[i].L1,memory[i].L2,memory[i].score);
+if (memory[i].score < max_reader_score) {fprintf(f,"%s;%s;%d\n",memory[i].L1,memory[i].L2,memory[i].score);}
 }
 
 fclose(f);
