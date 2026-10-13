@@ -11,8 +11,11 @@
 #define MAX_MEM 5000
 //MAX_MEM >= voc size
 #define MAX_WLEN 50
+#define MAX_INPUT 10
 
-int max_reader_score = 10;
+int sreport[50]={0};
+
+int max_reader_score = 10; //>=5
 
 int reader_score;
 
@@ -60,8 +63,6 @@ while (strcmp(memory[l].L1,"\0")>0) {l++;}
 return l;
 }
 
-int memory_len;
-
 //random number gen (min,max]
 int rn(int min, int max) {
 return min+rand()%(max-min)+1;}
@@ -75,8 +76,8 @@ exit(1);
 }
 
 int i;
-for (i=0;memory[i].L1[0]!='\0';i++){
-if (memory[i].score < max_reader_score) {fprintf(f,"%s;%s;%d\n",memory[i].L1,memory[i].L2,memory[i].score);}
+for (i=0;i<MAX_MEM;i++){
+if (memory[i].L1[0]!='\0' && memory[i].score < max_reader_score) {fprintf(f,"%s;%s;%d\n",memory[i].L1,memory[i].L2,memory[i].score);}
 }
 
 fclose(f);
@@ -103,16 +104,19 @@ choices[ci-1]=test_word_ind;
 printf("%s\n",memory[test_word_ind].L1);
 printf("1)%s,2)%s,3)%s\n",memory[choices[0]].L2,memory[choices[1]].L2,memory[choices[2]].L2);
 
-int ki=1;
-while(!scanf("%d",&ki)){getchar();} //clear bad input from stdin
-if (ki==4) {
+char istr[MAX_INPUT];
+fgets(istr, MAX_INPUT, stdin);
+while ((getchar())!='\n');
+int k=istr[0]-'0';
+
+if (k==4) {
 end_session=true;
 save_prog();
 }
-else if (ki==5) {
+else if (k==5) {
 memory[test_word_ind].score = max_reader_score;
 }
-else if (ki==ci) {printf("correct\n");correct=true;}
+else if (k==ci) {printf("correct\n");correct=true;}
 else {printf("%s=%s\n",memory[test_word_ind].L1,memory[test_word_ind].L2);}
 
 
@@ -123,8 +127,8 @@ return correct;
 bool completion_check() {
 bool completion=true;
 int i;
-for (i=0;i<memory_len;i++){
-if (memory[i].score<max_reader_score) {completion=false;}
+for (i=0;i<MAX_MEM;i++){
+if (memory[i].L1[0]!='\0' && memory[i].score<max_reader_score) {completion=false;}
 }
 if (completion) {save_prog();printf("set is completed");}
 
@@ -132,35 +136,56 @@ return completion;
 }
 //set completed when every word reaches max_reader_score
 
+int* mem_stat() {
+static int word_n[50]={0};
+for (int i=0;i<MAX_MEM;i++) {
+if (memory[i].L1[0]!='\0') {word_n[memory[i].score]++;}
+}
+
+return word_n;
+}
+
+
 
 
 void main(){
 
 srand(time(NULL));
 
-reader_score = rn(-1,max_reader_score-1);
+if (rn(-1,1)==0) {reader_score=0;} //50% chance to learn new
+else {reader_score = rn(-1,max_reader_score-1);} 
 
 read_voc();
 
-memory_len=m_len();
+int* report=mem_stat();
 
 while (true) {
 int i;
-for (i=0;i<memory_len;++i){
+for (i=0;i<MAX_MEM;++i){
 if (end_session==true) {break;}
-if (memory[i].score==reader_score) {
+if (memory[i].L1[0]!='\0' && memory[i].score==reader_score) {
 if (multichoice(i)) {memory[i].score+=1;}
 printf("%s %d/%d\n",memory[i].L1,memory[i].score,max_reader_score);
 }
 }
 
-reader_score++;
-
-if (reader_score>=max_reader_score) {reader_score=0;}
+reader_score = rn(-1,max_reader_score-1);
 
 if (completion_check()) {break;}
 
-if (end_session==true) {printf("end of session\n");break;}
+if (end_session==true) {
+printf("session report:\nstarts with:\n");
+
+for (int j=0;j<max_reader_score;j++) {
+printf("%d words each correctly chosen for %d times\n", report[j], j);
+report[j]=0;
+}
+
+mem_stat();
+printf("ends with:\n");
+for (int h=0;h<max_reader_score;h++) {printf("%d words each correctly chosen for %d times\n", report[h], h);}
+printf("end of session\n");
+break;}
 
 }
 }
